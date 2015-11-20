@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>fr.utbm.lejosev3.tr54</groupId>
+        <artifactId>TR54</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <project.main.class></project.main.class>
+        <debug>false</debug>
+    </properties>
+
+    <groupId>fr.utbm.lejosev3.tr54</groupId>
+    <artifactId>TP3</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainclass>${project.main.class}</mainclass>
+                        </manifest>
+                    </archive>
+                    <descriptorrefs>
+                        <descriptorref>jar-with-dependencies</descriptorref>
+                    </descriptorrefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <inherited>false</inherited>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <echo message="Push to server ${project.build.directory}/${project.build.finalName}*.jar">
+                                    <scp trust="yes" username="${brick.user}" password="" todir="root@${brick.host}:${brick.home}">
+                                        <fileset dir="${project.build.directory}">
+                                            <include name="${project.build.finalName}*.jar">
+                                            </include></fileset>
+                                    </scp>
+                                </echo></target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-cli</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- SSH -->
+                                <taskdef name="sshexec" classname="org.apache.tools.ant.taskdefs.optional.ssh.SSHExec" classpathref="maven.plugin.classpath">
+                                    <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath">
+                                        <!-- run the jar -->
+                                        <if>
+                                            <equals arg1="${debug}" arg2="true">
+                                                <then>
+                                                    <sshexec host="${brick.host}" trust="yes" username="${brick.user}" password="" command="jrun -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=${brick.debug.port},suspend=y -cp ${brick.home}/${project.build.finalName}-jar-with-dependencies.jar ${project.main.class}">
+                                                    </sshexec></then>
+                                                <else>
+                                                    <sshexec host="${brick.host}" trust="yes" username="${brick.user}" password="" command="jrun -cp ${brick.home}/${project.build.finalName}-jar-with-dependencies.jar ${project.main.class}">
+                                                    </sshexec></else>
+                                            </equals></if>
+                                    </taskdef></taskdef></target>
+                        </configuration>
+                    </execution>
+                </executions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>commons-net</groupId>
+                        <artifactId>commons-net</artifactId>
+                        <version>1.4.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ant</groupId>
+                        <artifactId>ant-commons-net</artifactId>
+                        <version>1.6.5</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ant</groupId>
+                        <artifactId>ant-jsch</artifactId>
+                        <version>1.6.5</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>jsch</groupId>
+                        <artifactId>jsch</artifactId>
+                        <version>0.1.29</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ant-contrib</groupId>
+                        <artifactId>ant-contrib</artifactId>
+                        <version>20020829</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>ev3classes</groupId>
+            <artifactId>ev3classes</artifactId>
+            <scope>compile</scope>
+            <version>0.9.0-beta</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>3.2.7</version>
+        </dependency>
+    </dependencies>
+    
+</project>
